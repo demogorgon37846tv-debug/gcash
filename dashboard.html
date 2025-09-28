@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCash Transaction Portal 2025</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #007aff;
+            --primary-dark: #005bb5;
+            --secondary: #5ac8fa;
+            --accent: #34c759;
+            --background: #ffffff;
+            --surface: #f2f2f7;
+            --glass: rgba(255, 255, 255, 0.9);
+            --text: #000000;
+            --text-secondary: #6e6e73;
+            --border: #d2d2d7;
+            --success: #34c759;
+            --warning: #ffcc00;
+            --error: #ff3b30;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 122, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(90, 200, 250, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 122, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(20px) rotate(240deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .header h1::after {
+            content: '✨';
+            position: absolute;
+            right: -20px;
+            top: -10px;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .month-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .month-selector select {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #ffffff;
+            font-size: 1rem;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        .glass-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--surface), rgba(0,0,0,0.01));
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent);
+            transition: left 0.6s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .rate-display {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.05), rgba(90, 200, 250, 0.05));
+            border: 1px solid rgba(0, 122, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .rate-title {
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rate-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .rate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .rate-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            transform: translateX(4px);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .amount-input {
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, rgba(52, 199, 89, 0.05), rgba(0, 122, 255, 0.05));
+            border: 1px solid rgba(52, 199, 89, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            border-top: 2px solid rgba(52, 199, 89, 0.2);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 100%;
+            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger:hover {
+            transform: scale(1.05);
+        }
+
+        .transaction-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .transaction-item {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            transition: all 0.3s ease;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .transaction-item:hover {
+            background: #f2f2f7;
+            transform: translateX(4px);
+        }
+
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .transaction-id {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .transaction-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background: rgba(255, 204, 0, 0.1);
+            color: var(--warning);
+        }
+
+        .transaction-details {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .transaction-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .transaction-balance {
+            font-size: 0.9rem;
+            color: var(--success);
+            margin-top: 0.5rem;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .month-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .summary-table th {
+            background: rgba(0, 122, 255, 0.05);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .summary-table td {
+            background: #ffffff;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .summary-table tr:hover td {
+            background: #f2f2f7;
+        }
+
+        .summary-table td:first-child {
+            font-weight: 600;
+        }
+
+        .pdf-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .pdf-controls select {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .pdf-controls button {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            width: auto;
+        }
+
+        /* Custom scrollbar */
+        .transaction-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .transaction-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .transaction-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .transaction-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .glass-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>GCash Transaction Portal</h1>
+            <div style="position:absolute; top:1.5rem; right:2rem;">
+                <span id="currentUser" style="font-weight:600; color:var(--text-secondary); margin-right:1rem;"></span>
+                <button id="logoutBtn" class="btn btn-danger">Log Out</button>
+            </div>
+            <p>Next-generation transaction management</p>
+        </div>
+
+        <div class="month-selector">
+            <select id="dashboardMonthSelect">
+                <option value="">All Months</option>
+            </select>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="totalTransactions">0</div>
+                <div class="stat-label">Total Transactions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="totalRevenue">₱0</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-value" id="totalCharges">₱0</div>
+                <div class="stat-label">Service Charges</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="averageTransaction">₱0</div>
+                <div class="stat-label">Average Transaction</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏦</div>
+                <div class="stat-value" id="gcashBalance">₱0</div>
+                <div class="stat-label">GCash Balance</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="glass-card">
+                <div class="card-header">
+                    <div class="card-icon">💳</div>
+                    <div class="card-title">New Transaction</div>
+                </div>
+                
+                <div class="rate-display">
+                    <div class="rate-title">
+                        📊 Service Charge Rates
+                    </div>
+                    <div class="rate-grid">
+                        <div class="rate-item">
+                            <span>Service Charge</span>
+                            <strong>₱10 per ₱1,000</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label for="customerName" class="form-label">Customer Name</label>
+                        <input type="text" id="customerName" class="form-input" required placeholder="Juan Dela Cruz">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber" class="form-label">GCash Number</label>
+                        <input type="tel" id="phoneNumber" class="form-input" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}" maxlength="11">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount" class="form-label">Amount (₱)</label>
+                        <input type="number" id="amount" class="form-input amount-input" required placeholder="0.00" min="1" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="charge" class="form-label">Service Charge (₱)</label>
+                        <input type="number" id="charge" class="form-input" required placeholder="0.00" min="0" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="includeCharge"> Add charge to GCash balance
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transactionType" class="form-label">Transaction Type</label>
+                        <select id="transactionType" class="form-input" required>
+                            <option value="">Select Type</option>
+                            <option value="cashin">Cash In</option>
+                            <option value="cashout">Cash Out</option>
+                            <option value="bills">Bills Payment</option>
+                            <option value="load">Buy Load</option>
+                            <option value="transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-row">
+                            <span>Amount:</span>
+                            <span id="summaryAmount">₱0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Service Charge:</span>
+                            <span id="summaryCharge">₱0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Amount to Collect:</span>
+                            <span id="summaryTotal">₱0.00</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Process Transaction</button>
+                </form>
+
+                <div style="margin-top: 3rem;">
+                    <div class="card-header">
+                        <div class="card-icon">⬆️</div>
+                        <div class="card-title">Top Up Capital</div>
+                    </div>
+
+                    <form id="topupForm">
+                        <div class="form-group">
+                            <label for="topupAmount" class="form-label">Amount (₱)</label>
+                            <input type="number" id="topupAmount" class="form-input amount-input" required placeholder="0.00" min="1" step="0.01">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Top Up</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div class="card-title">Transaction History</div>
+                </div>
+                
+                <div class="transaction-list" id="transactionList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📄</div>
+                        <p>No transactions yet</p>
+                    </div>
+                </div>
+
+                <div class="monthly-summaries" style="margin-top: 3rem;">
+                    <div class="card-header">
+                        <div class="card-icon">📅</div>
+                        <div class="card-title">Monthly Summary Transaction Log</div>
+                    </div>
+                    <div class="pdf-controls">
+                        <select id="monthSelect">
+                            <option value="">Select Month</option>
+                        </select>
+                        <button id="generatePdfBtn" class="btn btn-primary">Generate PDF</button>
+                        <button id="generateExcelBtn" class="btn btn-primary">Generate Excel</button>
+                    </div>
+                    <table class="summary-table" id="monthlySummaryTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase client (same config used in index.html)
+        (function(){
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js';
+            script.onload = function() {
+                window.SUPABASE_URL = 'https://nobmprhdmdofqpqhlwvz.supabase.co';
+                window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vYm1wcmhkbWRvZnFwcWhsd3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNDQ3OTIsImV4cCI6MjA3NDYyMDc5Mn0.0tUuzCTR3DF3ohcmeXeZaUbdaAN-Q5VOV9Zh4po1AjY';
+                window.supabase = window.supabase || window.supabaseJs || window.supabase; // keep available globally
+                try {
+                    window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+                } catch (e) {
+                    console.warn('Supabase client init error', e);
+                }
+            };
+            document.head.appendChild(script);
+        })();
+        // Per-user data keys
+        function currentUserEmail() {
+            // prefer Supabase user email if available
+            try {
+                const sup = window.supabase;
+                if (sup && sup.auth) {
+                    const local = localStorage.getItem('gcash_current_user');
+                    // Supabase getUser is async; but we may have stored current user locally during login
+                    return local;
+                }
+            } catch (e) { /* ignore */ }
+            return localStorage.getItem('gcash_current_user');
+        }
+
+        function userKey(prefix) {
+            const email = currentUserEmail();
+            return prefix + (email || '');
+        }
+
+        let transactions = [];
+        let transactionCounter = 1;
+
+        // Load transactions for current user
+        function loadUserData() {
+            const email = currentUserEmail();
+            if (!email) return false;
+            const txns = JSON.parse(localStorage.getItem(userKey('gcash_transactions_') ) || '[]');
+            const counter = parseInt(localStorage.getItem(userKey('gcash_txn_counter_')) || '1', 10);
+            transactions = txns || [];
+            transactionCounter = isNaN(counter) ? (transactions.length + 1) : counter;
+            return true;
+        }
+
+        function saveUserData() {
+            localStorage.setItem(userKey('gcash_transactions_'), JSON.stringify(transactions));
+            localStorage.setItem(userKey('gcash_txn_counter_'), String(transactionCounter));
+        }
+
+        const typeEffect = {
+            'Cash In': -1,
+            'Cash Out': 1,
+            'Bills Payment': -1,
+            'Buy Load': -1,
+            'Bank Transfer': -1,
+            'Top Up': 1
+        };
+
+        function calculateServiceCharge(amount) {
+            if (amount <= 0) return 0;
+            return 10 * Math.ceil(amount / 1000);
+        }
+
+        function formatCurrency(amount) {
+            return '₱' + parseFloat(amount).toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updateSummary() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const charge = parseFloat(document.getElementById('charge').value) || 0;
+            const total = amount + charge;
+
+            document.getElementById('summaryAmount').textContent = formatCurrency(amount);
+            document.getElementById('summaryCharge').textContent = formatCurrency(charge);
+            document.getElementById('summaryTotal').textContent = formatCurrency(total);
+        }
+
+        function getMonthlyGroups(trans) {
+            const monthlyGroups = new Map();
+            for (let t of trans) {
+                const date = new Date(t.date);
+                const key = date.toLocaleString('en-PH', { month: 'long', year: 'numeric' });
+                if (!monthlyGroups.has(key)) monthlyGroups.set(key, []);
+                monthlyGroups.get(key).push(t);
+            }
+            return monthlyGroups;
+        }
+
+        function populateMonthSelectors() {
+            const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const monthlyGroups = getMonthlyGroups(sorted);
+            const months = [...monthlyGroups.keys()].reverse();
+
+            const dashboardSelect = document.getElementById('dashboardMonthSelect');
+            const pdfSelect = document.getElementById('monthSelect');
+            dashboardSelect.innerHTML = '<option value="">All Months</option>';
+            pdfSelect.innerHTML = '<option value="">Select Month</option>';
+
+            for (let month of months) {
+                const optionDash = document.createElement('option');
+                optionDash.value = month;
+                optionDash.textContent = month;
+                dashboardSelect.appendChild(optionDash);
+
+                const optionPdf = document.createElement('option');
+                optionPdf.value = month;
+                optionPdf.textContent = month;
+                pdfSelect.appendChild(optionPdf);
+            }
+        }
+
+        function getFilteredTransactions(selectedMonth) {
+            if (!selectedMonth) return transactions;
+            return transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.toLocaleString('en-PH', { month: 'long', year: 'numeric' }) === selectedMonth;
+            });
+        }
+
+        function updateStats(filteredTrans) {
+            const totalTrans = filteredTrans.length;
+            const nonTopUpTrans = filteredTrans.filter(t => t.type !== 'Top Up');
+            const totalRev = nonTopUpTrans.reduce((sum, t) => sum + t.amount, 0);
+            const totalChrg = filteredTrans.reduce((sum, t) => sum + t.charge, 0);
+            const avgTrans = nonTopUpTrans.length > 0 ? totalRev / nonTopUpTrans.length : 0;
+
+            // Calculate balance and balance map
+            let sortedTrans = [...filteredTrans].sort((a, b) => new Date(a.date) - new Date(b.date));
+            let balance = 0;
+            let balanceMap = new Map();
+            for (let t of sortedTrans) {
+                balance += (typeEffect[t.type] || 0) * t.amount;
+                if (t.includeCharge) {
+                    balance += t.charge;
+                }
+                balanceMap.set(t.id, balance);
+            }
+
+            document.getElementById('totalTransactions').textContent = totalTrans;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRev);
+            document.getElementById('totalCharges').textContent = formatCurrency(totalChrg);
+            document.getElementById('averageTransaction').textContent = formatCurrency(avgTrans);
+            document.getElementById('gcashBalance').textContent = formatCurrency(balance);
+
+            return { balanceMap };
+        }
+
+        function renderTransactions(filteredTrans) {
+            const listEl = document.getElementById('transactionList');
+            const { balanceMap } = updateStats(filteredTrans);
+
+            if (filteredTrans.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📄</div>
+                        <p>No transactions yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort descending for display
+            let sorted = [...filteredTrans].sort((a, b) => new Date(b.date) - new Date(a.date));
+            let html = '';
+            let currentMonth = '';
+
+            for (let t of sorted) {
+                let transDate = new Date(t.date);
+                let monthStr = transDate.toLocaleString('en-PH', { month: 'long', year: 'numeric' });
+
+                if (monthStr !== currentMonth) {
+                    if (currentMonth !== '') html += '</div>';
+                    html += `<div class="month-group">
+                        <h3 class="month-header">${monthStr}</h3>`;
+                    currentMonth = monthStr;
+                }
+
+                html += `
+                    <div class="transaction-item">
+                        <div class="transaction-header">
+                            <span class="transaction-id">TXN-${String(t.id).padStart(6, '0')}</span>
+                            <span class="transaction-status ${t.status === 'Completed' ? 'status-completed' : 'status-pending'}">${t.status}</span>
+                        </div>
+                        <div class="transaction-details">
+                            <div><strong>${t.customerName}</strong></div>
+                            ${t.phoneNumber ? `<div>📱 ${t.phoneNumber}</div>` : ''}
+                            <div>📅 ${t.date}</div>
+                            <div>Type: ${t.type}</div>
+                            <div>Add Charge to Balance: ${t.includeCharge ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div class="transaction-amount">
+                            ${formatCurrency(t.total)} 
+                            <span style="font-size: 0.9rem; color: var(--text-secondary);">(${formatCurrency(t.amount)} + ${formatCurrency(t.charge)} fee)</span>
+                        </div>
+                        <div class="transaction-balance">
+                            Balance after: ${formatCurrency(balanceMap.get(t.id))}
+                        </div>
+                        <button class="btn btn-danger delete-btn" onclick="deleteTransaction(${t.id})">Delete</button>
+                    </div>
+                `;
+            }
+
+            if (currentMonth !== '') html += '</div>';
+
+            listEl.innerHTML = html;
+        }
+
+        function renderMonthlySummaries() {
+            const tableEl = document.getElementById('monthlySummaryTable');
+            if (transactions.length === 0) {
+                tableEl.innerHTML = '<tr><td colspan="6">No summaries yet</td></tr>';
+                return;
+            }
+            const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const monthlyGroups = getMonthlyGroups(sorted);
+            const { balanceMap } = updateStats(transactions); // Global for summaries
+            let html = '<thead><tr><th>Month</th><th>Transactions</th><th>Revenue</th><th>Service Charges</th><th>Avg Trans</th><th>Ending Balance</th></tr></thead><tbody>';
+            const months = [...monthlyGroups.keys()].reverse();
+            for (let month of months) {
+                const trans = monthlyGroups.get(month);
+                const nonTopUpTrans = trans.filter(t => t.type !== 'Top Up');
+                const numTrans = trans.length;
+                const totalRev = nonTopUpTrans.reduce((sum, t) => sum + t.amount, 0);
+                const totalChrg = trans.reduce((sum, t) => sum + t.charge, 0);
+                const avgTrans = nonTopUpTrans.length > 0 ? totalRev / nonTopUpTrans.length : 0;
+                const lastTrans = trans[trans.length - 1];
+                const endingBalance = balanceMap.get(lastTrans.id);
+                html += `<tr><td>${month}</td><td>${numTrans}</td><td>${formatCurrency(totalRev)}</td><td>${formatCurrency(totalChrg)}</td><td>${formatCurrency(avgTrans)}</td><td>${formatCurrency(endingBalance)}</td></tr>`;
+            }
+            html += '</tbody>';
+            tableEl.innerHTML = html;
+        }
+
+        function updateDashboard(selectedMonth = '') {
+            const filteredTrans = getFilteredTransactions(selectedMonth);
+            renderTransactions(filteredTrans);
+            updateStats(filteredTrans);
+            renderMonthlySummaries();
+        }
+
+        function generatePdf() {
+            const selectedMonth = document.getElementById('monthSelect').value;
+            if (!selectedMonth) {
+                alert('Please select a month.');
+                return;
+            }
+            const monthTrans = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.toLocaleString('en-PH', { month: 'long', year: 'numeric' }) === selectedMonth;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const { balanceMap } = updateStats(transactions); // Use global balance map
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text(`Monthly Transaction Log - ${selectedMonth}`, 14, 20);
+
+            const columns = ['ID', 'Date', 'Customer', 'Phone', 'Type', 'Amount', 'Service Charge', 'Total', 'Add Charge to Balance', 'Balance After'];
+            const data = monthTrans.map(t => [
+                `TXN-${String(t.id).padStart(6, '0')}`,
+                t.date,
+                t.customerName,
+                t.phoneNumber || 'N/A',
+                t.type,
+                formatCurrency(t.amount),
+                formatCurrency(t.charge),
+                formatCurrency(t.total),
+                t.includeCharge ? 'Yes' : 'No',
+                formatCurrency(balanceMap.get(t.id))
+            ]);
+
+            // Calculate totals
+            const totalAmount = monthTrans.reduce((sum, t) => sum + t.amount, 0);
+            const totalCharge = monthTrans.reduce((sum, t) => sum + t.charge, 0);
+            const totalTotal = monthTrans.reduce((sum, t) => sum + t.total, 0);
+            const lastBalance = monthTrans.length > 0 ? balanceMap.get(monthTrans[monthTrans.length - 1].id) : 0;
+
+            data.push([
+                'Total',
+                '',
+                '',
+                '',
+                '',
+                formatCurrency(totalAmount),
+                formatCurrency(totalCharge),
+                formatCurrency(totalTotal),
+                '',
+                formatCurrency(lastBalance)
+            ]);
+
+            doc.autoTable({
+                head: [columns],
+                body: data,
+                startY: 30,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: [0, 122, 255], textColor: 255 },
+                alternateRowStyles: { fillColor: [242, 242, 247] },
+                footStyles: { fillColor: [0, 122, 255], textColor: 255, fontStyle: 'bold' }
+            });
+
+            doc.save(`transaction_log_${selectedMonth.replace(' ', '_')}.pdf`);
+        }
+
+        function generateExcel() {
+            const selectedMonth = document.getElementById('monthSelect').value;
+            if (!selectedMonth) {
+                alert('Please select a month.');
+                return;
+            }
+            const monthTrans = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.toLocaleString('en-PH', { month: 'long', year: 'numeric' }) === selectedMonth;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const { balanceMap } = updateStats(transactions); // Use global balance map
+            const columns = ['ID', 'Date', 'Customer', 'Phone', 'Type', 'Amount', 'Service Charge', 'Total', 'Add Charge to Balance', 'Balance After'];
+            const data = monthTrans.map(t => [
+                `TXN-${String(t.id).padStart(6, '0')}`,
+                t.date,
+                t.customerName,
+                t.phoneNumber || 'N/A',
+                t.type,
+                t.amount,
+                t.charge,
+                t.total,
+                t.includeCharge ? 'Yes' : 'No',
+                balanceMap.get(t.id)
+            ]);
+
+            // Calculate totals
+            const totalAmount = monthTrans.reduce((sum, t) => sum + t.amount, 0);
+            const totalCharge = monthTrans.reduce((sum, t) => sum + t.charge, 0);
+            const totalTotal = monthTrans.reduce((sum, t) => sum + t.total, 0);
+            const lastBalance = monthTrans.length > 0 ? balanceMap.get(monthTrans[monthTrans.length - 1].id) : 0;
+
+            data.push([
+                'Total',
+                '',
+                '',
+                '',
+                '',
+                totalAmount,
+                totalCharge,
+                totalTotal,
+                '',
+                lastBalance
+            ]);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([columns, ...data]);
+            XLSX.utils.book_append_sheet(wb, ws, selectedMonth);
+            XLSX.writeFile(wb, `transaction_log_${selectedMonth.replace(' ', '_')}.xlsx`);
+        }
+
+        function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveUserData();
+                populateMonthSelectors();
+                const selectedMonth = document.getElementById('dashboardMonthSelect').value;
+                updateDashboard(selectedMonth);
+            }
+        }
+
+        function getTransactionTypeLabel(type) {
+            const types = {
+                'cashin': 'Cash In',
+                'cashout': 'Cash Out',
+                'bills': 'Bills Payment',
+                'load': 'Buy Load',
+                'transfer': 'Bank Transfer'
+            };
+            return types[type] || type;
+        }
+
+        function showSuccessNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, var(--success), #10b981);
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 12px;
+                box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+                z-index: 1000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('amount').value);
+            const charge = parseFloat(document.getElementById('charge').value) || 0;
+            const includeCharge = document.getElementById('includeCharge').checked;
+            const total = amount + charge;
+            
+            const transaction = {
+                id: transactionCounter++,
+                customerName: document.getElementById('customerName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                amount: amount,
+                charge: charge,
+                includeCharge: includeCharge,
+                total: total,
+                type: getTransactionTypeLabel(document.getElementById('transactionType').value),
+                date: new Date().toLocaleString('en-PH'),
+                status: 'Completed'
+            };
+            
+            transactions.unshift(transaction);
+            saveUserData();
+            populateMonthSelectors();
+            const selectedMonth = document.getElementById('dashboardMonthSelect').value;
+            updateDashboard(selectedMonth);
+            
+            showSuccessNotification(`Transaction processed! Total: ${formatCurrency(total)}`);
+            
+            this.reset();
+            updateSummary();
+        });
+
+        document.getElementById('topupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('topupAmount').value);
+            
+            const transaction = {
+                id: transactionCounter++,
+                customerName: 'Self',
+                phoneNumber: '',
+                amount: amount,
+                charge: 0,
+                includeCharge: false,
+                total: amount,
+                type: 'Top Up',
+                date: new Date().toLocaleString('en-PH'),
+                status: 'Completed'
+            };
+            
+            transactions.unshift(transaction);
+            saveUserData();
+            populateMonthSelectors();
+            const selectedMonth = document.getElementById('dashboardMonthSelect').value;
+            updateDashboard(selectedMonth);
+            
+            showSuccessNotification(`Top Up successful! Amount: ${formatCurrency(amount)}`);
+            
+            this.reset();
+        });
+
+        document.getElementById('amount').addEventListener('input', function() {
+            const amount = parseFloat(this.value) || 0;
+            const calculatedCharge = calculateServiceCharge(amount);
+            document.getElementById('charge').value = calculatedCharge.toFixed(2);
+            updateSummary();
+        });
+
+        document.getElementById('charge').addEventListener('input', updateSummary);
+
+        document.getElementById('includeCharge').addEventListener('change', updateSummary);
+
+        document.getElementById('phoneNumber').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+
+        document.getElementById('generatePdfBtn').addEventListener('click', generatePdf);
+        document.getElementById('generateExcelBtn').addEventListener('click', generateExcel);
+
+        document.getElementById('dashboardMonthSelect').addEventListener('change', function(e) {
+            updateDashboard(e.target.value);
+        });
+        // On load: verify user logged in and load their data
+        (function init() {
+            const email = currentUserEmail();
+            if (!email) {
+                // Not logged in - redirect to login page
+                window.location.href = 'index.html';
+                return;
+            }
+            // show current user
+            document.getElementById('currentUser').textContent = email;
+            // wire logout
+            document.getElementById('logoutBtn').addEventListener('click', async function() {
+                try {
+                    if (window.supabase && window.supabase.auth) {
+                        await window.supabase.auth.signOut();
+                    }
+                } catch (e) {
+                    console.warn('Supabase signOut error', e);
+                }
+                localStorage.removeItem('gcash_current_user');
+                window.location.href = 'index.html';
+            });
+
+            loadUserData();
+            populateMonthSelectors();
+            updateDashboard();
+        })();
+    </script>
+</body>
+</html>
