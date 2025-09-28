@@ -372,33 +372,21 @@
             <div class="toggle-link" id="toggleAuth">Don't have an account? Register</div>
         </div>
     </div>
-
+    <!-- Supabase client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
     <script>
-        // Simple client-side auth using localStorage (demo only)
+        // Supabase configuration (provided)
+        const SUPABASE_URL = 'https://nobmprhdmdofqpqhlwvz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vYm1wcmhkbWRvZnFwcWhsd3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNDQ3OTIsImV4cCI6MjA3NDYyMDc5Mn0.0tUuzCTR3DF3ohcmeXeZaUbdaAN-Q5VOV9Zh4po1AjY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const toggleAuth = document.getElementById('toggleAuth');
         const cardTitle = document.getElementById('cardTitle');
 
-        function getUsers() {
-            return JSON.parse(localStorage.getItem('gcash_users') || '[]');
-        }
-
-        function saveUsers(users) {
-            localStorage.setItem('gcash_users', JSON.stringify(users));
-        }
-
-        function setCurrentUser(email) {
+        function setLocalCurrentUser(email) {
             localStorage.setItem('gcash_current_user', email);
-        }
-
-        function getCurrentUserEmail() {
-            return localStorage.getItem('gcash_current_user');
-        }
-
-        function findUserByEmail(email) {
-            const users = getUsers();
-            return users.find(u => u.email.toLowerCase() === (email || '').toLowerCase());
         }
 
         toggleAuth.addEventListener('click', function() {
@@ -415,26 +403,24 @@
             }
         });
 
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
-            const user = findUserByEmail(email);
-            if (!user) {
-                alert('No account found for that email. Please register.');
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert('Login error: ' + error.message);
                 return;
             }
-            if (user.password !== password) {
-                alert('Incorrect password.');
-                return;
-            }
-            // Successful login
-            setCurrentUser(user.email);
-            // Redirect to dashboard
+
+            // Successful login: store email locally for dashboard compatibility and redirect
+            const userEmail = data.user?.email || email;
+            setLocalCurrentUser(userEmail);
             window.location.href = 'dashboard.html';
         });
 
-        registerForm.addEventListener('submit', function(e) {
+        registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('registerName').value.trim();
             const email = document.getElementById('registerEmail').value.trim().toLowerCase();
@@ -451,28 +437,28 @@
                 return;
             }
 
-            if (findUserByEmail(email)) {
-                alert('An account with that email already exists. Please log in.');
+            // Register with Supabase
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) {
+                alert('Registration error: ' + error.message);
                 return;
             }
 
-            const users = getUsers();
-            users.push({ name, email, password });
-            saveUsers(users);
-
-            // create empty transaction store for the user
+            // Create empty transaction store for the user locally (still demo storage)
             localStorage.setItem('gcash_transactions_' + email, JSON.stringify([]));
             localStorage.setItem('gcash_txn_counter_' + email, '1');
 
-            // auto-login and redirect to dashboard
-            setCurrentUser(email);
+            // Auto-login: Supabase signUp may require email confirm; if user returned, set local user
+            const userEmail = data.user?.email || email;
+            setLocalCurrentUser(userEmail);
             window.location.href = 'dashboard.html';
         });
 
-        // If already logged in, redirect to dashboard immediately
-        (function() {
-            const current = getCurrentUserEmail();
-            if (current) {
+        // If already logged in (check Supabase), redirect to dashboard immediately
+        (async function() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && user.email) {
+                setLocalCurrentUser(user.email);
                 window.location.href = 'dashboard.html';
             }
         })();
