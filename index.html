@@ -372,18 +372,45 @@
             <div class="toggle-link" id="toggleAuth">Don't have an account? Register</div>
         </div>
     </div>
+    <div style="position:fixed; bottom:18px; left:18px; z-index:999; max-width:520px;">
+        <div id="authStatus" style="background:#fff; padding:8px 12px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.08); color:#111; font-size:0.95rem; max-width:520px;"></div>
+        <pre id="authErrorDump" style="display:none; background:#111; color:#fff; padding:10px; border-radius:8px; margin-top:8px; max-height:240px; overflow:auto; font-size:0.8rem;"></pre>
+    </div>
     <!-- Supabase client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
     <script>
         // Supabase configuration (provided)
         const SUPABASE_URL = 'https://nobmprhdmdofqpqhlwvz.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vYm1wcmhkbWRvZnFwcWhsd3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNDQ3OTIsImV4cCI6MjA3NDYyMDc5Mn0.0tUuzCTR3DF3ohcmeXeZaUbdaAN-Q5VOV9Zh4po1AjY';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabase = null;
+        let supabaseReady = false;
+        try {
+            const sup = window.supabase || window.supabaseJs;
+            if (!sup || !sup.createClient) throw new Error('Supabase SDK not found');
+            supabase = sup.createClient(SUPABASE_URL, SUPABASE_KEY);
+            supabaseReady = true;
+        } catch (e) {
+            console.error('Supabase init error', e);
+            document.addEventListener('DOMContentLoaded', () => {
+                const el = document.getElementById('authStatus');
+                if (el) { el.textContent = 'Supabase initialization error: ' + e.message; el.style.color = '#b91c1c'; }
+            });
+        }
 
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const toggleAuth = document.getElementById('toggleAuth');
         const cardTitle = document.getElementById('cardTitle');
+
+        console.log('Supabase client', supabase);
+        const authStatusEl = document.getElementById('authStatus');
+        function setAuthStatus(msg, isError = false) {
+            if (authStatusEl) {
+                authStatusEl.textContent = msg;
+                authStatusEl.style.color = isError ? '#b91c1c' : '#065f46';
+            }
+            console.log('AUTH STATUS:', msg);
+        }
 
         function setLocalCurrentUser(email) {
             localStorage.setItem('gcash_current_user', email);
@@ -408,16 +435,30 @@
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                alert('Login error: ' + error.message);
+            if (!supabaseReady) {
+                setAuthStatus('Cannot sign in: Supabase not initialized. Check console for details.', true);
+                console.error('Attempted sign-in before Supabase was ready');
                 return;
             }
 
-            // Successful login: store email locally for dashboard compatibility and redirect
-            const userEmail = data.user?.email || email;
-            setLocalCurrentUser(userEmail);
-            window.location.href = 'dashboard.html';
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                console.log('signInWithPassword result', { data, error });
+                if (error) {
+                    console.error('Login error full', error);
+                    setAuthStatus('Login error: ' + (error.message || JSON.stringify(error)), true);
+                    const dump = document.getElementById('authErrorDump');
+                    if (dump) { dump.style.display = 'block'; dump.textContent = JSON.stringify(error, null, 2); }
+                    return;
+                }
+                const userEmail = data.user?.email || email;
+                setLocalCurrentUser(userEmail);
+                setAuthStatus('Login successful. Redirecting...', false);
+                setTimeout(() => window.location.href = 'dashboard.html', 400);
+            } catch (err) {
+                console.error('Unexpected login error', err);
+                setAuthStatus('Login failed: ' + (err.message || String(err)), true);
+            }
         });
 
         registerForm.addEventListener('submit', async function(e) {
@@ -428,38 +469,70 @@
             const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
             if (password !== confirmPassword) {
-                alert('Passwords do not match!');
+                setAuthStatus('Passwords do not match!', true);
                 return;
             }
 
             if (!name || !email || !password) {
-                alert('Please fill in all required fields.');
+                setAuthStatus('Please fill in all required fields.', true);
                 return;
             }
 
-            // Register with Supabase
-            const { data, error } = await supabase.auth.signUp({ email, password });
-            if (error) {
-                alert('Registration error: ' + error.message);
+            if (!supabaseReady) {
+                setAuthStatus('Cannot register: Supabase not initialized. Check console for details.', true);
+                console.error('Attempted sign-up before Supabase was ready');
                 return;
             }
 
-            // Create empty transaction store for the user locally (still demo storage)
-            localStorage.setItem('gcash_transactions_' + email, JSON.stringify([]));
-            localStorage.setItem('gcash_txn_counter_' + email, '1');
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: { full_name: name },
+                        emailRedirectTo: window.location.origin + '/dashboard.html'
+                    }
+                });
+                console.log('signUp result', { data, error });
+                if (error) {
+                    console.error('Registration error full', error);
+                    setAuthStatus('Registration error: ' + (error.message || JSON.stringify(error)), true);
+                    const dump = document.getElementById('authErrorDump');
+                    if (dump) { dump.style.display = 'block'; dump.textContent = JSON.stringify(error, null, 2); }
+                    return;
+                }
 
-            // Auto-login: Supabase signUp may require email confirm; if user returned, set local user
-            const userEmail = data.user?.email || email;
-            setLocalCurrentUser(userEmail);
-            window.location.href = 'dashboard.html';
+                // If Supabase returns a user immediately, we can set current user and redirect
+                if (data && data.user && data.user.email) {
+                    localStorage.setItem('gcash_transactions_' + data.user.email, JSON.stringify([]));
+                    localStorage.setItem('gcash_txn_counter_' + data.user.email, '1');
+                    setLocalCurrentUser(data.user.email);
+                    setAuthStatus('Registration successful — signed in. Redirecting...', false);
+                    setTimeout(() => window.location.href = 'dashboard.html', 700);
+                    return;
+                }
+
+                // Otherwise, signUp succeeded but the user may need to confirm email first
+                setAuthStatus('Registration submitted. Check your email to confirm your account before signing in.', false);
+                localStorage.setItem('gcash_transactions_' + email, JSON.stringify([]));
+                localStorage.setItem('gcash_txn_counter_' + email, '1');
+            } catch (err) {
+                console.error('Unexpected signUp error', err);
+                setAuthStatus('Registration failed: ' + (err.message || String(err)), true);
+            }
         });
 
         // If already logged in (check Supabase), redirect to dashboard immediately
         (async function() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user && user.email) {
-                setLocalCurrentUser(user.email);
-                window.location.href = 'dashboard.html';
+            try {
+                if (!supabaseReady) return;
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.email) {
+                    setLocalCurrentUser(user.email);
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                console.warn('Error checking existing auth session', err);
             }
         })();
     </script>
